@@ -1,7 +1,7 @@
 # HR_Employee_Performance_Analyzer
 The project aims to analyze HR data to uncover trends, patterns, and relationships that can help optimize employee performance, engagement, retention, and overall organizational efficiency.
 
-![performance_management_system-1](https://github.com/user-attachments/assets/fa00ad4c-8061-4cb8-bcb7-e19c14b451df)
+![image](https://github.com/user-attachments/assets/9f798da7-5bc0-44a0-bfe5-d3ba2c9fdcd1)
 
 # HR Dashboard
 

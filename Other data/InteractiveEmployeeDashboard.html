@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Employee Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .chart {
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Employee Dashboard</h1>
+    <p>Upload your JSON file to generate the dashboard:</p>
+    <input type="file" id="fileInput" accept=".json">
+    <div id="dashboard">
+        <div id="departmentChart" class="chart"></div>
+        <div id="salaryChart" class="chart"></div>
+        <div id="performanceChart" class="chart"></div>
+        <div id="satisfactionChart" class="chart"></div>
+        <div id="employmentChart" class="chart"></div>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = JSON.parse(e.target.result);
+                generateDashboard(data);
+            };
+            reader.readAsText(file);
+        }
+
+        function generateDashboard(data) {
+            // 1. Department-Wise Employee Distribution
+            const departments = data.map(emp => emp.Department);
+            const departmentCounts = {};
+            departments.forEach(dep => departmentCounts[dep] = (departmentCounts[dep] || 0) + 1);
+
+            Plotly.newPlot('departmentChart', [{
+                x: Object.keys(departmentCounts),
+                y: Object.values(departmentCounts),
+                type: 'bar'
+            }], {
+                title: 'Department-Wise Employee Distribution',
+                xaxis: { title: 'Department' },
+                yaxis: { title: 'Employee Count' }
+            });
+
+            // 2. Average Salary by Position
+            const positions = [...new Set(data.map(emp => emp.Position))];
+            const avgSalaries = positions.map(pos => {
+                const filtered = data.filter(emp => emp.Position === pos);
+                return filtered.reduce((sum, emp) => sum + emp.Salary, 0) / filtered.length;
+            });
+
+            Plotly.newPlot('salaryChart', [{
+                x: avgSalaries,
+                y: positions,
+                type: 'bar',
+                orientation: 'h'
+            }], {
+                title: 'Average Salary by Position',
+                xaxis: { title: 'Average Salary' },
+                yaxis: { title: 'Position' }
+            });
+
+            // 3. Employee Performance Score Distribution
+            const performanceScores = data.map(emp => emp.PerformanceScore);
+            const scoreCounts = {};
+            performanceScores.forEach(score => scoreCounts[score] = (scoreCounts[score] || 0) + 1);
+
+            Plotly.newPlot('performanceChart', [{
+                values: Object.values(scoreCounts),
+                labels: Object.keys(scoreCounts),
+                type: 'pie'
+            }], {
+                title: 'Employee Performance Score Distribution'
+            });
+
+            // 4. Employee Satisfaction vs. Engagement Survey Scores
+            const satisfaction = data.map(emp => emp.EmployeeSatisfaction);
+            const engagement = data.map(emp => emp.EngagementSurvey);
+
+            Plotly.newPlot('satisfactionChart', [{
+                x: engagement,
+                y: satisfaction,
+                mode: 'markers',
+                type: 'scatter',
+                marker: { size: 10 }
+            }], {
+                title: 'Satisfaction vs. Engagement Survey Scores',
+                xaxis: { title: 'Engagement Survey' },
+                yaxis: { title: 'Employee Satisfaction' }
+            });
+
+            // 5. Active vs. Terminated Employees Over Time
+            const activeDates = data.filter(emp => emp.EmploymentStatus === 'Active').map(emp => emp.HiringDate);
+            const terminatedDates = data.filter(emp => emp.EmploymentStatus !== 'Active').map(emp => emp.TerminationDate).filter(date => date !== 'NULL');
+
+            const activeYears = activeDates.map(date => new Date(date).getFullYear());
+            const terminatedYears = terminatedDates.map(date => new Date(date).getFullYear());
+
+            const activeCounts = {};
+            activeYears.forEach(year => activeCounts[year] = (activeCounts[year] || 0) + 1);
+
+            const terminatedCounts = {};
+            terminatedYears.forEach(year => terminatedCounts[year] = (terminatedCounts[year] || 0) + 1);
+
+            Plotly.newPlot('employmentChart', [
+                {
+                    x: Object.keys(activeCounts),
+                    y: Object.values(activeCounts),
+                    name: 'Active Employees',
+                    type: 'scatter',
+                    mode: 'lines+markers'
+                },
+                {
+                    x: Object.keys(terminatedCounts),
+                    y: Object.values(terminatedCounts),
+                    name: 'Terminated Employees',
+                    type: 'scatter',
+                    mode: 'lines+markers'
+                }
+            ], {
+                title: 'Active vs. Terminated Employees Over Time',
+                xaxis: { title: 'Year' },
+                yaxis: { title: 'Employee Count' }
+            });
+        }
+    </script>
+</body>
+</html>
